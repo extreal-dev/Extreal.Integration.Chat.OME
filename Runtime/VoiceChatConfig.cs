@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Extreal.Integration.VoiceChat
+namespace Extreal.Integration.Chat.OME
 {
     public class VoiceChatConfig
     {
@@ -43,7 +43,7 @@ namespace Extreal.Integration.VoiceChat
         /// <summary>
         /// Username for TURN server.
         /// </summary>
-        public string Username { get; }
+        public string UserName { get; }
 
         /// <summary>
         /// Credential for TURN server.
@@ -59,7 +59,7 @@ namespace Extreal.Integration.VoiceChat
         public IceServerConfig(List<string> urls, string username = "", string credential = "")
         {
             Urls = urls;
-            Username = username;
+            UserName = username;
             Credential = credential;
         }
     }

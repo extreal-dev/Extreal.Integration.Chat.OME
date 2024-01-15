@@ -1,7 +1,7 @@
+#if !UNITY_WEBGL || UNITY_EDITOR
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UniRx;
-using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -9,21 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.WebRTC;
 
-namespace Extreal.Integration.VoiceChat
+namespace Extreal.Integration.Chat.OME
 {
-    public class NativeVoiceChat : DisposableBase
+    public class NativeVoiceChatClient : VoiceChatClient
     {
-        public IObservable<string> OnJoined => websocket.OnJoined;
-        public IObservable<string> OnLeft => websocket.OnLeft;
-        public IObservable<string> OnUserJoined => websocket.OnUserJoined;
-        public IObservable<string> OnUserLeft => websocket.OnUserLeft;
-
-        public IObservable<bool> OnMuted => onMuted;
-        private readonly Subject<bool> onMuted;
-
-        public IObservable<IReadOnlyDictionary<string, float>> OnAudioLevelChanged => onAudioLevelChanged;
-        private readonly Subject<IReadOnlyDictionary<string, float>> onAudioLevelChanged;
-
         private readonly VoiceChatConfig voiceChatConfig;
         private readonly string userName = Guid.NewGuid().ToString();
 
@@ -45,11 +34,11 @@ namespace Extreal.Integration.VoiceChat
 
         private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-        private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(NativeVoiceChat));
+        private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
 
 
         [SuppressMessage("Usage", "CC0022")]
-        public NativeVoiceChat(VoiceChatConfig voiceChatConfig)
+        public NativeVoiceChatClient(VoiceChatConfig voiceChatConfig) : base(voiceChatConfig)
         {
             voiceChatContainer = new GameObject("VoiceChatContainer").transform;
             UnityEngine.Object.DontDestroyOnLoad(voiceChatContainer);
@@ -61,13 +50,16 @@ namespace Extreal.Integration.VoiceChat
             var iceServers = voiceChatConfig.IceServerConfigs.Select(iceServerConfig => new RTCIceServer
             {
                 urls = iceServerConfig.Urls.ToArray(),
-                username = iceServerConfig.Username,
+                username = iceServerConfig.UserName,
                 credential = iceServerConfig.Credential,
             }).ToList();
 
             websocket = new OmeWebSocket(voiceChatConfig.ServerUrl, iceServers, userName).AddTo(disposables);
-            onMuted = new Subject<bool>().AddTo(disposables);
-            onAudioLevelChanged = new Subject<IReadOnlyDictionary<string, float>>().AddTo(disposables);
+
+            websocket.OnJoined.Subscribe(FireOnJoined).AddTo(disposables);
+            websocket.OnLeft.Subscribe(FireOnLeft).AddTo(disposables);
+            websocket.OnUserJoined.Subscribe(FireOnUserJoined).AddTo(disposables);
+            websocket.OnUserLeft.Subscribe(FireOnUserLeft).AddTo(disposables);
 
             websocket.AddPublishPcCreateHook(CreatePublishPc);
             websocket.AddSubscribePcCreateHook(CreateSubscribePc);
@@ -94,13 +86,9 @@ namespace Extreal.Integration.VoiceChat
             OnLeft
                 .Subscribe(_ => localStreamName = null)
                 .AddTo(disposables);
-
-            Observable.Interval(TimeSpan.FromSeconds(this.voiceChatConfig.AudioLevelCheckIntervalSeconds))
-                .Subscribe(_ => AudioLevelChangeHandler())
-                .AddTo(disposables);
         }
 
-        protected override void ReleaseManagedResources()
+        protected override void DoReleaseManagedResources()
         {
             Microphone.End(null);
             disposables.Dispose();
@@ -201,17 +189,10 @@ namespace Extreal.Integration.VoiceChat
             return outAudio;
         }
 
-        public async UniTask ConnectAsync(string roomName)
-        {
-            if (Logger.IsDebug())
-            {
-                Logger.LogDebug($"Connect: RoomName={roomName}, UserName={userName}, ServerUrl={voiceChatConfig.ServerUrl}");
-            }
+        protected override async UniTask DoConnectAsync(string roomName)
+            => await websocket.ConnectAsync(roomName);
 
-            await websocket.ConnectAsync(roomName);
-        }
-
-        public async UniTask DisconnectAsync()
+        public override async UniTask DisconnectAsync()
         {
             await websocket.Close();
 
@@ -220,28 +201,28 @@ namespace Extreal.Integration.VoiceChat
             outVolume = voiceChatConfig.InitialOutVolume;
         }
 
-        public bool HasMicrophone() => mic != null;
+        public override bool HasMicrophone() => mic != null;
 
-        public void ToggleMute()
+        protected override bool DoToggleMute()
         {
             mute = !mute;
             inResource.inAudio.mute = mute;
-            onMuted.OnNext(mute);
+            return mute;
         }
 
-        public void SetInVolume(float volume)
+        protected override void DoSetInVolume(float volume)
         {
-            inVolume = Mathf.Clamp(volume, 0f, 1f);
+            inVolume = volume;
             inResource.inAudio.volume = inVolume;
         }
 
-        public void SetOutVolume(float volume)
+        protected override void DoSetOutVolume(float volume)
         {
-            outVolume = Mathf.Clamp(volume, 0f, 1f);
+            outVolume = volume;
             outResources.Values.ToList().ForEach(outResource => outResource.outAudio.volume = outVolume);
         }
 
-        private void AudioLevelChangeHandler()
+        protected override void AudioLevelChangeHandler()
         {
             if (string.IsNullOrEmpty(localStreamName))
             {
@@ -273,7 +254,7 @@ namespace Extreal.Integration.VoiceChat
             {
                 if (!audioLevelList.ContainsKey(streamName) || audioLevelList[streamName] != previousAudioLevelList[streamName])
                 {
-                    onAudioLevelChanged.OnNext(audioLevelList);
+                    FireOnAudioLevelChanged(audioLevelList);
                     return;
                 }
             }
@@ -281,7 +262,7 @@ namespace Extreal.Integration.VoiceChat
             {
                 if (!previousAudioLevelList.ContainsKey(streamName))
                 {
-                    onAudioLevelChanged.OnNext(audioLevelList);
+                    FireOnAudioLevelChanged(audioLevelList);
                     return;
                 }
             }
@@ -295,3 +276,4 @@ namespace Extreal.Integration.VoiceChat
         }
     }
 }
+#endif

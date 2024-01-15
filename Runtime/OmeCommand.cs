@@ -1,10 +1,11 @@
+#if !UNITY_WEBGL || UNITY_EDITOR
 using System;
 using UnityEngine;
 using System.Collections.Generic;
 using Unity.WebRTC;
 using System.Linq;
 
-namespace Extreal.Integration.VoiceChat
+namespace Extreal.Integration.Chat.OME
 {
     [Serializable]
     public class OmeRTCSessionDescription : ISerializationCallbackReceiver
@@ -230,3 +231,4 @@ namespace Extreal.Integration.VoiceChat
         }
     }
 }
+#endif

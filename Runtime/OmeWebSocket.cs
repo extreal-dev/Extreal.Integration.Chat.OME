@@ -1,3 +1,4 @@
+#if !UNITY_WEBGL || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ using Extreal.Core.Common.System;
 using UniRx;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Extreal.Integration.VoiceChat
+namespace Extreal.Integration.Chat.OME
 {
     public class OmeWebSocket : WebSocket, IDisposable
     {
@@ -402,3 +403,4 @@ namespace Extreal.Integration.VoiceChat
         }
     }
 }
+#endif

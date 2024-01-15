@@ -1,8 +1,9 @@
+#if !UNITY_WEBGL || UNITY_EDITOR
 using Unity.WebRTC;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 
-namespace Extreal.Integration.VoiceChat
+namespace Extreal.Integration.Chat.OME
 {
     public class OmeRTCPeerConnection : RTCPeerConnection
     {
@@ -80,3 +81,4 @@ namespace Extreal.Integration.VoiceChat
         }
     }
 }
+#endif
