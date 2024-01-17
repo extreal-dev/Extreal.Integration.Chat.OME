@@ -3,20 +3,18 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UniRx;
 using Extreal.Core.Logging;
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.WebRTC;
+using Extreal.Integration.SFU.OME;
 
 namespace Extreal.Integration.Chat.OME
 {
     public class NativeVoiceChatClient : VoiceChatClient
     {
+        private readonly NativeOmeClient omeClient;
         private readonly VoiceChatConfig voiceChatConfig;
-        private readonly string userName = Guid.NewGuid().ToString();
-
-        private readonly OmeWebSocket websocket;
         private string localStreamName;
 
         private readonly Transform voiceChatContainer;
@@ -33,38 +31,19 @@ namespace Extreal.Integration.Chat.OME
         private readonly Dictionary<string, float> previousAudioLevelList = new Dictionary<string, float>();
 
         private readonly CompositeDisposable disposables = new CompositeDisposable();
-
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
 
 
         [SuppressMessage("Usage", "CC0022")]
-        public NativeVoiceChatClient(VoiceChatConfig voiceChatConfig) : base(voiceChatConfig)
+        public NativeVoiceChatClient(NativeOmeClient omeClient, VoiceChatConfig voiceChatConfig) : base(voiceChatConfig)
         {
             voiceChatContainer = new GameObject("VoiceChatContainer").transform;
-            UnityEngine.Object.DontDestroyOnLoad(voiceChatContainer);
+            Object.DontDestroyOnLoad(voiceChatContainer);
 
             this.voiceChatConfig = voiceChatConfig;
             mute = this.voiceChatConfig.InitialMute;
             inVolume = this.voiceChatConfig.InitialInVolume;
             outVolume = this.voiceChatConfig.InitialOutVolume;
-            var iceServers = voiceChatConfig.IceServerConfigs.Select(iceServerConfig => new RTCIceServer
-            {
-                urls = iceServerConfig.Urls.ToArray(),
-                username = iceServerConfig.UserName,
-                credential = iceServerConfig.Credential,
-            }).ToList();
-
-            websocket = new OmeWebSocket(voiceChatConfig.ServerUrl, iceServers, userName).AddTo(disposables);
-
-            websocket.OnJoined.Subscribe(FireOnJoined).AddTo(disposables);
-            websocket.OnLeft.Subscribe(FireOnLeft).AddTo(disposables);
-            websocket.OnUserJoined.Subscribe(FireOnUserJoined).AddTo(disposables);
-            websocket.OnUserLeft.Subscribe(FireOnUserLeft).AddTo(disposables);
-
-            websocket.AddPublishPcCreateHook(CreatePublishPc);
-            websocket.AddSubscribePcCreateHook(CreateSubscribePc);
-            websocket.AddPublishPcCloseHook(ClosePublishPc);
-            websocket.AddSubscribePcCloseHook(CloseSubscribePc);
 
             var audioConf = AudioSettings.GetConfiguration();
             audioConf.dspBufferSize = 256;
@@ -79,11 +58,17 @@ namespace Extreal.Integration.Chat.OME
                 }
             }
 
-            OnJoined
+            this.omeClient = omeClient;
+            this.omeClient.AddPublishPcCreateHook(CreatePublishPc);
+            this.omeClient.AddSubscribePcCreateHook(CreateSubscribePc);
+            this.omeClient.AddPublishPcCloseHook(ClosePublishPc);
+            this.omeClient.AddSubscribePcCloseHook(CloseSubscribePc);
+
+            this.omeClient.OnJoined
                 .Subscribe(streamName => localStreamName = streamName)
                 .AddTo(disposables);
 
-            OnLeft
+            this.omeClient.OnLeft
                 .Subscribe(_ => localStreamName = null)
                 .AddTo(disposables);
         }
@@ -91,6 +76,7 @@ namespace Extreal.Integration.Chat.OME
         protected override void DoReleaseManagedResources()
         {
             Microphone.End(null);
+            Object.Destroy(voiceChatContainer);
             disposables.Dispose();
         }
 
@@ -150,7 +136,7 @@ namespace Extreal.Integration.Chat.OME
             if (inResource.inAudio != null)
             {
                 inResource.inAudio.Stop();
-                UnityEngine.Object.Destroy(inResource.inAudio.gameObject);
+                Object.Destroy(inResource.inAudio.gameObject);
             }
             if (inResource.inTrack != null)
             {
@@ -171,7 +157,7 @@ namespace Extreal.Integration.Chat.OME
                 if (outResource.outAudio != null)
                 {
                     outResource.outAudio.Stop();
-                    UnityEngine.Object.Destroy(outResource.outAudio.gameObject);
+                    Object.Destroy(outResource.outAudio.gameObject);
                 }
                 if (outResource.outStream != null)
                 {
@@ -189,13 +175,8 @@ namespace Extreal.Integration.Chat.OME
             return outAudio;
         }
 
-        protected override async UniTask DoConnectAsync(string roomName)
-            => await websocket.ConnectAsync(roomName);
-
-        public override async UniTask DisconnectAsync()
+        public override void Clear()
         {
-            await websocket.Close();
-
             mute = voiceChatConfig.InitialMute;
             inVolume = voiceChatConfig.InitialInVolume;
             outVolume = voiceChatConfig.InitialOutVolume;

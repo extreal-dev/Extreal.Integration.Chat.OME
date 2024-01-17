@@ -1,11 +1,11 @@
 using System;
-using UnityEngine;
+using Extreal.Integration.SFU.OME;
 
 namespace Extreal.Integration.Chat.OME
 {
-    public class VoiceChatClientProvider : MonoBehaviour
+    public class VoiceChatClientProvider
     {
-        public static VoiceChatClient Provide(VoiceChatConfig voiceChatConfig)
+        public static VoiceChatClient Provide(OmeClient omeClient, VoiceChatConfig voiceChatConfig)
         {
             if (voiceChatConfig == null)
             {
@@ -13,7 +13,7 @@ namespace Extreal.Integration.Chat.OME
             }
 
 #if !UNITY_WEBGL || UNITY_EDITOR
-            return new NativeVoiceChatClient(voiceChatConfig);
+            return new NativeVoiceChatClient(omeClient as NativeOmeClient, voiceChatConfig);
 #else
             return new WebGLVoiceChatClient(new WebGLVoiceChatConfig(voiceChatConfig));
 #endif

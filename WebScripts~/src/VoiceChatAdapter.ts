@@ -1,5 +1,6 @@
-import { VoiceChatClient } from "./VoiceChatClient";
 import { addAction, addFunction, callback } from "@extreal-dev/extreal.integration.web.common";
+import { OmeClientProvider } from "../Extreal.Integration.SFU.OME/OmeAdapter";
+import { VoiceChatClient } from "./VoiceChatClient";
 
 let hasMicrophone = false;
 (async () => {
@@ -15,17 +16,13 @@ let hasMicrophone = false;
 class VoiceChatAdapter {
     private voiceChatClient: VoiceChatClient | null = null;
 
-    public adapt = () => {
+    public adapt = (getOmeClient: OmeClientProvider) => {
         addAction(this.withPrefix("WebGLVoiceChatClient"), (jsonVoiceChatConfig) => {
             const voiceChatConfig = JSON.parse(jsonVoiceChatConfig);
             if (voiceChatConfig.isDebug) {
                 console.log(voiceChatConfig);
             }
-            this.voiceChatClient = new VoiceChatClient(voiceChatConfig, hasMicrophone, {
-                onJoined: (streamName) => callback(this.withPrefix("HandleOnJoined"), streamName),
-                onLeft: (reason) => callback(this.withPrefix("HandleOnLeft"), reason),
-                onUserJoined: (streamName) => callback(this.withPrefix("HandleOnUserJoined"), streamName),
-                onUserLeft: (streamName) => callback(this.withPrefix("HandleOnUserLeft"), streamName),
+            this.voiceChatClient = new VoiceChatClient(getOmeClient, voiceChatConfig, hasMicrophone, {
                 onAudioLevelChanged: (audioLevels) => {
                     const audioLevelPairs = {
                         pairs: [...audioLevels.entries()].map((pair) => ({ key: pair[0], value: pair[1] })),
@@ -35,11 +32,7 @@ class VoiceChatAdapter {
             });
         });
 
-        addAction(this.withPrefix("DoReleaseManagedResources"), () =>
-            this.getVoiceChatClient().releaseManagedResources(),
-        );
-        addAction(this.withPrefix("DoConnectAsync"), (roomName) => this.getVoiceChatClient().connect(roomName));
-        addAction(this.withPrefix("DisconnectAsync"), () => this.getVoiceChatClient().disconnect());
+        addAction(this.withPrefix("Clear"), () => this.getVoiceChatClient().clear());
         addFunction(this.withPrefix("HasMicrophone"), () => hasMicrophone.toString());
         addFunction(this.withPrefix("DoToggleMute"), () => this.getVoiceChatClient().toggleMute().toString());
         addAction(this.withPrefix("DoSetInVolume"), (volume) => this.getVoiceChatClient().setInVolume(Number(volume)));

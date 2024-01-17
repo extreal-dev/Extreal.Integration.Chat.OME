@@ -74,4 +74,3 @@ crashlytics-build.properties
 # npm
 WebScripts~/dist
 WebScripts~/node_modules
-SignalingServer~/node_modules

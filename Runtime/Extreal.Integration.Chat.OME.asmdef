@@ -6,10 +6,10 @@
         "Extreal.Core.Logging",
         "Extreal.Core.Common",
         "Extreal.Integration.Web.Common",
+        "Extreal.Integration.SFU.OME",
         "UniTask",
         "UniRx",
-        "Unity.WebRTC",
-        "endel.nativewebsocket"
+        "Unity.WebRTC"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

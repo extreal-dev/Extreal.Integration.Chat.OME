@@ -1,10 +1,6 @@
-import { OmeRTCPeerConnection } from "./OmeRTCPeerConnection";
-import { OmeWebSocket } from "./OmeWebSocket";
-import { v4 as uuidv4 } from "uuid";
+import { OmeClientProvider } from "../Extreal.Integration.SFU.OME/OmeAdapter";
 
 type VoiceChatConfig = {
-    serverUrl: string;
-    iceServers: RTCIceServer[];
     initialMute: boolean;
     initialInVolume: number;
     initialOutVolume: number;
@@ -12,10 +8,6 @@ type VoiceChatConfig = {
 };
 
 type VoiceChatClientCallbacks = {
-    onJoined: (streamName: string) => void;
-    onLeft: (reason: string) => void;
-    onUserJoined: (streamName: string) => void;
-    onUserLeft: (streamName: string) => void;
     onAudioLevelChanged: (audioLevels: Map<string, number>) => void;
 };
 
@@ -34,15 +26,10 @@ class OutResource {
 }
 
 class VoiceChatClient {
-    private readonly isDebug;
-
+    private readonly getOmeClient;
     private readonly voiceChatConfig;
     private readonly hasMicrophone;
     private readonly callbacks;
-
-    private socket: OmeWebSocket | null = null;
-    private userName = uuidv4();
-    private localStreamName = "";
 
     private mute;
     private inVolume;
@@ -55,15 +42,25 @@ class VoiceChatClient {
     private audioLevelList = new Map<string, number>();
     private previousAudioLevelList = new Map<string, number>();
 
-    constructor(voiceChatConfig: VoiceChatConfig, hasMicrophone: boolean, callbacks: VoiceChatClientCallbacks) {
+    constructor(
+        getOmeClient: OmeClientProvider,
+        voiceChatConfig: VoiceChatConfig,
+        hasMicrophone: boolean,
+        callbacks: VoiceChatClientCallbacks,
+    ) {
+        this.getOmeClient = getOmeClient;
         this.voiceChatConfig = voiceChatConfig;
-        this.isDebug = voiceChatConfig.isDebug;
         this.hasMicrophone = hasMicrophone;
         this.callbacks = callbacks;
 
         this.mute = this.voiceChatConfig.initialMute;
         this.inVolume = this.voiceChatConfig.initialInVolume;
         this.outVolume = this.voiceChatConfig.initialOutVolume;
+
+        this.getOmeClient().addPublishPcCreateHook(this.createPublishPc);
+        this.getOmeClient().addSubscribePcCreateHook(this.createSubscribePc);
+        this.getOmeClient().addPublishPcCloseHook(this.closePublishPc);
+        this.getOmeClient().addSubscribePcCloseHook(this.closeSubscribePc);
 
         const audioContextResumeFunc = () => {
             if (!this.audioContext) {
@@ -79,13 +76,7 @@ class VoiceChatClient {
         document.getElementById("unity-canvas")?.addEventListener("keydown", audioContextResumeFunc);
     }
 
-    public releaseManagedResources = () => {
-        if (this.socket) {
-            this.socket.releaseManagedResources();
-        }
-    };
-
-    private createPublishPc = async (streamName: string, pc: OmeRTCPeerConnection) => {
+    private createPublishPc = async (streamName: string, pc: RTCPeerConnection) => {
         if (!this.audioContext) {
             this.audioContext = new AudioContext();
         }
@@ -116,7 +107,7 @@ class VoiceChatClient {
         }
     };
 
-    private createSubscribePc = (streamName: string, pc: OmeRTCPeerConnection) => {
+    private createSubscribePc = (streamName: string, pc: RTCPeerConnection) => {
         const outAudio = new Audio();
         const outResource = new OutResource();
         outResource.outAudio = outAudio;
@@ -143,7 +134,7 @@ class VoiceChatClient {
         });
     };
 
-    private closePublishPc = (streamName: string, pc: OmeRTCPeerConnection) => {
+    private closePublishPc = (streamName: string, pc: RTCPeerConnection) => {
         if (!this.inResource) {
             return;
         }
@@ -155,7 +146,7 @@ class VoiceChatClient {
         this.inResource = undefined;
     };
 
-    private closeSubscribePc = (streamName: string, pc: OmeRTCPeerConnection) => {
+    private closeSubscribePc = (streamName: string, pc: RTCPeerConnection) => {
         const outResource = this.outResources.get(streamName);
         if (!outResource) {
             return;
@@ -172,40 +163,7 @@ class VoiceChatClient {
         this.outResources.delete(streamName);
     };
 
-    public connect = (roomName: string) => {
-        this.socket = new OmeWebSocket(
-            this.voiceChatConfig.serverUrl,
-            this.voiceChatConfig.iceServers,
-            roomName,
-            this.userName,
-            this.isDebug,
-            {
-                onJoined: (streamName) => {
-                    this.callbacks.onJoined(streamName);
-                    this.localStreamName = streamName;
-                },
-                onLeft: (reason) => {
-                    this.callbacks.onLeft(reason);
-                    this.localStreamName = "";
-                },
-                onUserJoined: this.callbacks.onUserJoined,
-                onUserLeft: this.callbacks.onUserLeft,
-            },
-        );
-
-        this.socket.addPublishPcCreateHook(this.createPublishPc);
-        this.socket.addSubscribePcCreateHook(this.createSubscribePc);
-        this.socket.addPublishPcCloseHook(this.closePublishPc);
-        this.socket.addSubscribePcCloseHook(this.closeSubscribePc);
-    };
-
-    public disconnect = () => {
-        if (!this.socket) {
-            return;
-        }
-
-        this.socket.close();
-
+    public clear = () => {
         this.mute = this.voiceChatConfig.initialMute;
         this.inVolume = this.voiceChatConfig.initialInVolume;
         this.outVolume = this.voiceChatConfig.initialOutVolume;
@@ -247,7 +205,7 @@ class VoiceChatClient {
     };
 
     public handleAudioLevels = () => {
-        if (!this.localStreamName) {
+        if (!this.getOmeClient().localStreamName) {
             return;
         }
 
@@ -259,7 +217,7 @@ class VoiceChatClient {
 
         if (this.inResource?.inAnalyzerNode) {
             const inAudioLevel = this.mute ? 0 : this.getAudioLevel(this.inResource.inAnalyzerNode);
-            this.audioLevelList.set(this.localStreamName, inAudioLevel);
+            this.audioLevelList.set(this.getOmeClient().localStreamName, inAudioLevel);
         }
 
         this.outResources.forEach((outResource, streamName) => {

@@ -8,8 +8,8 @@ namespace Extreal.Integration.Chat.OME
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(WebGLVoiceChatConfig));
 
         public WebGLVoiceChatConfig(VoiceChatConfig voiceChatConfig)
-            : base(voiceChatConfig.ServerUrl, voiceChatConfig.IceServerConfigs, voiceChatConfig.InitialMute,
-                voiceChatConfig.InitialInVolume, voiceChatConfig.InitialOutVolume, voiceChatConfig.AudioLevelCheckIntervalSeconds)
+            : base(voiceChatConfig.InitialMute, voiceChatConfig.InitialInVolume,
+                voiceChatConfig.InitialOutVolume, voiceChatConfig.AudioLevelCheckIntervalSeconds)
         {
         }
     }

@@ -1,6 +1,6 @@
 {
   "name": "@extreal-dev/extreal.integration.chat.ome",
-  "version": "1.0.0-Next.1",
+  "version": "1.0.0-next.1",
   "scripts": {
     "dev": "rollup --config rollup.config.ts --configPlugin typescript",
     "prod": "rollup --config rollup.config.ts --configPlugin typescript --environment BUILD:production"
@@ -31,7 +31,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@extreal-dev/extreal.integration.web.common": "^1.0.0",
-    "uuid": "^9.0.1"
+    "@extreal-dev/extreal.integration.sfu.ome": "../../Extreal.Integration.SFU.OME/WebScripts~/",
+    "@extreal-dev/extreal.integration.web.common": "^1.0.0"
   }
 }
