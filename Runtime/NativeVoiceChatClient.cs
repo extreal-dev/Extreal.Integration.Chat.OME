@@ -131,7 +131,7 @@ namespace Extreal.Integration.Chat.OME
             };
         }
 
-        private void ClosePublishPc(string streamName, OmeRTCPeerConnection pc)
+        private void ClosePublishPc(string streamName)
         {
             if (inResource.inAudio != null)
             {
@@ -150,7 +150,7 @@ namespace Extreal.Integration.Chat.OME
             inResource = (default, default, default);
         }
 
-        private void CloseSubscribePc(string streamName, OmeRTCPeerConnection pc)
+        private void CloseSubscribePc(string streamName)
         {
             if (outResources.TryGetValue(streamName, out var outResource))
             {

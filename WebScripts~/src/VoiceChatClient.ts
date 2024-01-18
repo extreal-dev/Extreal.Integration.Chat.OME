@@ -1,4 +1,4 @@
-import { OmeClientProvider } from "../Extreal.Integration.SFU.OME/OmeAdapter";
+import { OmeClientProvider } from "@extreal-dev/extreal.integration.sfu.ome";
 
 type VoiceChatConfig = {
     initialMute: boolean;
@@ -134,7 +134,7 @@ class VoiceChatClient {
         });
     };
 
-    private closePublishPc = (streamName: string, pc: RTCPeerConnection) => {
+    private closePublishPc = (streamName: string) => {
         if (!this.inResource) {
             return;
         }
@@ -146,7 +146,7 @@ class VoiceChatClient {
         this.inResource = undefined;
     };
 
-    private closeSubscribePc = (streamName: string, pc: RTCPeerConnection) => {
+    private closeSubscribePc = (streamName: string) => {
         const outResource = this.outResources.get(streamName);
         if (!outResource) {
             return;
