@@ -82,24 +82,21 @@ namespace Extreal.Integration.Chat.OME
 
         private void CreatePublishPc(string streamName, OmeRTCPeerConnection pc)
         {
-            if (HasMicrophone())
+            inResource.inAudio = new GameObject("InAudio").AddComponent<AudioSource>();
+            inResource.inAudio.transform.SetParent(voiceChatContainer);
+
+            inResource.inAudio.loop = true;
+            inResource.inAudio.clip = mic;
+            inResource.inAudio.Play();
+            inResource.inAudio.mute = mute;
+            inResource.inAudio.volume = inVolume;
+
+            inResource.inTrack = new AudioStreamTrack(inResource.inAudio)
             {
-                inResource.inAudio = new GameObject("InAudio").AddComponent<AudioSource>();
-                inResource.inAudio.transform.SetParent(voiceChatContainer);
-
-                inResource.inAudio.loop = true;
-                inResource.inAudio.clip = mic;
-                inResource.inAudio.Play();
-                inResource.inAudio.mute = mute;
-                inResource.inAudio.volume = inVolume;
-
-                inResource.inTrack = new AudioStreamTrack(inResource.inAudio)
-                {
-                    Loopback = false
-                };
-                inResource.inStream = new MediaStream();
-                pc.AddTrack(inResource.inTrack, inResource.inStream);
-            }
+                Loopback = false
+            };
+            inResource.inStream = new MediaStream();
+            pc.AddTrack(inResource.inTrack, inResource.inStream);
         }
 
         private void CreateSubscribePc(string streamName, OmeRTCPeerConnection pc)
@@ -182,7 +179,7 @@ namespace Extreal.Integration.Chat.OME
             outVolume = voiceChatConfig.InitialOutVolume;
         }
 
-        public override bool HasMicrophone() => mic != null;
+        public override bool HasMicrophone() => mic != null || inResource.inAudio?.clip != null;
 
         protected override bool DoToggleMute()
         {
