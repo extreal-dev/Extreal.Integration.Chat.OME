@@ -1,0 +1,27 @@
+{
+    "name": "Extreal.Integration.Chat.OME.MVS",
+    "rootNamespace": "Extreal.Integration.Chat.OME.MVS",
+    "references": [
+        "Unity.TextMeshPro",
+        "Unity.WebRTC",
+        "UniTask",
+        "UniRx",
+        "VContainer",
+        "Extreal.Core.Logging",
+        "Extreal.Core.Common",
+        "Extreal.Core.StageNavigation",
+        "Extreal.Integration.Web.Common",
+        "Extreal.Integration.SFU.OME",
+        "Extreal.Integration.Chat.OME",
+        "Extreal.Framework.Analyzer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
