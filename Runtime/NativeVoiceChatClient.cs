@@ -27,8 +27,7 @@ namespace Extreal.Integration.Chat.OME
         private float outVolume;
         private float[] samples = new float[2048];
 
-        private readonly Dictionary<string, float> audioLevelList = new Dictionary<string, float>();
-        private readonly Dictionary<string, float> previousAudioLevelList = new Dictionary<string, float>();
+        private readonly Dictionary<string, float> audioLevels = new Dictionary<string, float>();
 
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
@@ -184,14 +183,20 @@ namespace Extreal.Integration.Chat.OME
         protected override bool DoToggleMute()
         {
             mute = !mute;
-            inResource.inAudio.mute = mute;
+            if (inResource.inAudio != null)
+            {
+                inResource.inAudio.mute = mute;
+            }
             return mute;
         }
 
         protected override void DoSetInVolume(float volume)
         {
             inVolume = volume;
-            inResource.inAudio.volume = inVolume;
+            if (inResource.inAudio != null)
+            {
+                inResource.inAudio.volume = inVolume;
+            }
         }
 
         protected override void DoSetOutVolume(float volume)
@@ -200,48 +205,40 @@ namespace Extreal.Integration.Chat.OME
             outResources.Values.ToList().ForEach(outResource => outResource.outAudio.volume = outVolume);
         }
 
-        protected override void AudioLevelChangeHandler()
+        protected override void HandleAudioLevelChange()
         {
             if (string.IsNullOrEmpty(localStreamName))
             {
                 return;
             }
 
-            previousAudioLevelList.Clear();
-            foreach (var streamName in audioLevelList.Keys)
-            {
-                previousAudioLevelList[streamName] = audioLevelList[streamName];
-            }
-            audioLevelList.Clear();
+            HandleInAudioLevelChange();
+            HandleOutAudioLevelChange();
+        }
 
+        private void HandleInAudioLevelChange()
+        {
             if (inResource.inAudio != null)
             {
-                var inAudioLevel = inResource.inAudio.mute ? 0f : GetAudioLevel(inResource.inAudio);
-                audioLevelList[localStreamName] = inAudioLevel;
-            }
-            foreach ((var streamName, var outResource) in outResources)
-            {
-                if (outResource.outAudio != null)
+                var audioLevel = mute ? 0f : GetAudioLevel(inResource.inAudio);
+                if (!audioLevels.ContainsKey(localStreamName) || audioLevels[localStreamName] != audioLevel)
                 {
-                    var outAudioLevel = GetAudioLevel(outResource.outAudio);
-                    audioLevelList[streamName] = outAudioLevel;
+                    audioLevels[localStreamName] = audioLevel;
+                    FireOnAudioLevelChanged(localStreamName, audioLevel);
                 }
             }
+        }
 
-            foreach (var streamName in previousAudioLevelList.Keys)
+        private void HandleOutAudioLevelChange()
+        {
+            foreach (var streamName in outResources.Keys)
             {
-                if (!audioLevelList.ContainsKey(streamName) || audioLevelList[streamName] != previousAudioLevelList[streamName])
+                var outAudio = outResources[streamName].outAudio;
+                var audioLevel = GetAudioLevel(outAudio);
+                if (!audioLevels.ContainsKey(streamName) || audioLevels[streamName] != audioLevel)
                 {
-                    FireOnAudioLevelChanged(audioLevelList);
-                    return;
-                }
-            }
-            foreach (var streamName in audioLevelList.Keys)
-            {
-                if (!previousAudioLevelList.ContainsKey(streamName))
-                {
-                    FireOnAudioLevelChanged(audioLevelList);
-                    return;
+                    audioLevels[streamName] = audioLevel;
+                    FireOnAudioLevelChanged(streamName, audioLevel);
                 }
             }
         }

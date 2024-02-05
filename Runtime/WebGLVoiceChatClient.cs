@@ -22,8 +22,11 @@ namespace Extreal.Integration.Chat.OME
         }
 
         [MonoPInvokeCallback(typeof(Action<string, string>))]
-        private static void HandleOnAudioLevelChanged(string audioLevelListStr, string unused)
-            => instance.FireOnAudioLevelChanged(JsonUtility.FromJson<JsonDictionary<string, float>>(audioLevelListStr).Dict);
+        private static void HandleOnAudioLevelChanged(string id, string audioLevelStr)
+        {
+            var audioLevel = float.Parse(audioLevelStr);
+            instance.FireOnAudioLevelChanged(id, audioLevel);
+        }
 
         public override void Clear()
             => WebGLHelper.CallAction(WithPrefix(nameof(Clear)));
@@ -40,8 +43,8 @@ namespace Extreal.Integration.Chat.OME
         protected override void DoSetOutVolume(float volume)
             => WebGLHelper.CallAction(WithPrefix(nameof(DoSetOutVolume)), volume.ToString());
 
-        protected override void AudioLevelChangeHandler()
-            => WebGLHelper.CallAction(WithPrefix(nameof(AudioLevelChangeHandler)));
+        protected override void HandleAudioLevelChange()
+            => WebGLHelper.CallAction(WithPrefix(nameof(HandleAudioLevelChange)));
 
         private static string WithPrefix(string name) => $"{nameof(WebGLVoiceChatClient)}#{name}";
     }

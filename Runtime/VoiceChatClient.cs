@@ -5,7 +5,6 @@ using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
 
 namespace Extreal.Integration.Chat.OME
 {
@@ -22,10 +21,10 @@ namespace Extreal.Integration.Chat.OME
             onMuted.OnNext(muted);
         }
 
-        public IObservable<IReadOnlyDictionary<string, float>> OnAudioLevelChanged => onAudioLevelChanged;
-        private readonly Subject<IReadOnlyDictionary<string, float>> onAudioLevelChanged;
-        protected void FireOnAudioLevelChanged(IReadOnlyDictionary<string, float> audioLevelList)
-            => onAudioLevelChanged.OnNext(audioLevelList);
+        public IObservable<(string id, float audioLevel)> OnAudioLevelChanged => onAudioLevelChanged;
+        private readonly Subject<(string, float)> onAudioLevelChanged;
+        protected void FireOnAudioLevelChanged(string id, float audioLevel)
+            => onAudioLevelChanged.OnNext((id, audioLevel));
 
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
@@ -35,10 +34,10 @@ namespace Extreal.Integration.Chat.OME
         protected VoiceChatClient(VoiceChatConfig voiceChatConfig)
         {
             onMuted = new Subject<bool>().AddTo(disposables);
-            onAudioLevelChanged = new Subject<IReadOnlyDictionary<string, float>>().AddTo(disposables);
+            onAudioLevelChanged = new Subject<(string, float)>().AddTo(disposables);
 
             Observable.Interval(TimeSpan.FromSeconds(voiceChatConfig.AudioLevelCheckIntervalSeconds))
-                .Subscribe(_ => AudioLevelChangeHandler())
+                .Subscribe(_ => HandleAudioLevelChange())
                 .AddTo(disposables);
         }
 
@@ -88,6 +87,6 @@ namespace Extreal.Integration.Chat.OME
 
         protected abstract void DoSetOutVolume(float volume);
 
-        protected abstract void AudioLevelChangeHandler();
+        protected abstract void HandleAudioLevelChange();
     }
 }
