@@ -14,6 +14,6 @@ namespace Extreal.Integration.Chat.OME.MVS.App
             => this.stageNavigator = stageNavigator;
 
         public void Start()
-            => stageNavigator.ReplaceAsync(StageName.NameSettingStage).Forget();
+            => stageNavigator.ReplaceAsync(StageName.GroupSelectionStage).Forget();
     }
 }

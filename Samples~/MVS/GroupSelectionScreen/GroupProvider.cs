@@ -25,10 +25,7 @@ namespace Extreal.Integration.Chat.OME.MVS.GroupSelectionScreen
 
         protected override void ReleaseManagedResources() => disposables.Dispose();
 
-        public async UniTask UpdateGroupsAsync()
-        {
-            this.groups.Value = await omeClient.ListGroupsAsync();
-        }
+        public async UniTask UpdateGroupsAsync() => groups.Value = await omeClient.ListGroupsAsync();
 
         public Group FindByName(string name) => groups.Value.First(groups => groups.Name == name);
     }

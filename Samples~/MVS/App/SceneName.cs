@@ -13,7 +13,6 @@
 
         // Screen
         GroupSelectionScreen = 200,
-        NameSettingScreen = 201,
 
         // Space
         VirtualSpace = 300,

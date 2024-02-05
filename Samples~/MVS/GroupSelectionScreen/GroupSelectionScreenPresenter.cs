@@ -33,10 +33,6 @@ namespace Extreal.Integration.Chat.OME.MVS.GroupSelectionScreen
 
         public void Initialize()
         {
-            groupSelectionScreenView.OnBackButtonClicked
-                .Subscribe(_ => stageNavigator.ReplaceAsync(StageName.NameSettingStage).Forget())
-                .AddTo(disposables);
-
             groupSelectionScreenView.OnJoinMethodChanged
                 .Subscribe(appState.SetJoinMethod)
                 .AddTo(disposables);

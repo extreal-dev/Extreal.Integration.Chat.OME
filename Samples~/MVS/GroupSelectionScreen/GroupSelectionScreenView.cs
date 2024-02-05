@@ -11,14 +11,11 @@ namespace Extreal.Integration.Chat.OME.MVS.GroupSelectionScreen
 {
     public class GroupSelectionScreenView : MonoBehaviour
     {
-        [SerializeField] private Button backButton;
         [SerializeField] private TMP_Dropdown joinMethodDropdown;
         [SerializeField] private TMP_InputField groupNameInputField;
         [SerializeField] private TMP_Dropdown groupDropdown;
         [SerializeField] private Button updateButton;
         [SerializeField] private Button goButton;
-
-        public IObservable<Unit> OnBackButtonClicked => backButton.OnClickAsObservable().TakeUntilDestroy(this);
 
         public IObservable<JoinMethod> OnJoinMethodChanged =>
             joinMethodDropdown.onValueChanged.AsObservable()

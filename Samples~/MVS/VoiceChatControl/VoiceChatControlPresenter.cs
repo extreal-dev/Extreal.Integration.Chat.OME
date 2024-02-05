@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Extreal.Core.Common.System;
-using Extreal.Integration.Chat.OME.MVS.App;
 using Extreal.Integration.SFU.OME;
 using UniRx;
 using VContainer.Unity;
@@ -11,7 +10,6 @@ namespace Extreal.Integration.Chat.OME.MVS.Controls.VoiceChatControl
 {
     public class VoiceChatControlPresenter : DisposableBase, IInitializable
     {
-        private readonly AppState appState;
         private readonly VoiceChatClient voiceChatClient;
         private readonly VoiceChatControlView voiceChatControlView;
         private readonly VoiceChatConfig voiceChatConfig;
@@ -23,14 +21,12 @@ namespace Extreal.Integration.Chat.OME.MVS.Controls.VoiceChatControl
 
         public VoiceChatControlPresenter
         (
-            AppState appState,
             VoiceChatClient voiceChatClient,
             VoiceChatControlView voiceChatControlView,
             VoiceChatConfig voiceChatConfig,
             OmeClient omeClient
         )
         {
-            this.appState = appState;
             this.voiceChatClient = voiceChatClient;
             this.voiceChatControlView = voiceChatControlView;
             this.voiceChatConfig = voiceChatConfig;
@@ -71,12 +67,12 @@ namespace Extreal.Integration.Chat.OME.MVS.Controls.VoiceChatControl
                 })
                 .AddTo(disposables);
 
-            appState.NameDict.ObserveCountChanged()
-                .Subscribe(_ => UpdateAudioLevelText())
-                .AddTo(disposables);
-
             omeClient.OnUserLeft
-                .Subscribe(id => audioLevels.Remove(id))
+                .Subscribe(id =>
+                {
+                    audioLevels.Remove(id);
+                    UpdateAudioLevelText();
+                })
                 .AddTo(disposables);
 
             voiceChatControlView.Initialize(voiceChatConfig.InitialMute);
@@ -87,10 +83,6 @@ namespace Extreal.Integration.Chat.OME.MVS.Controls.VoiceChatControl
             var stringBuilder = new StringBuilder();
             foreach (var id in audioLevels.Keys)
             {
-                // if (appState.NameDict.TryGetValue(id, out var name))
-                // {
-                //     stringBuilder.Append($"{name}: {audioLevels[id]:f3}{System.Environment.NewLine}");
-                // }
                 stringBuilder.Append($"{id[..8]}: {audioLevels[id]:f3}{System.Environment.NewLine}");
             }
             voiceChatControlView.SetAudioLevelsText(stringBuilder.ToString());
