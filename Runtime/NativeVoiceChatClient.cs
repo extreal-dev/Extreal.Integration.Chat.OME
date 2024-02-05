@@ -75,7 +75,10 @@ namespace Extreal.Integration.Chat.OME
         protected override void DoReleaseManagedResources()
         {
             Microphone.End(null);
-            Object.Destroy(voiceChatContainer);
+            if (voiceChatContainer != null && voiceChatContainer.gameObject != null)
+            {
+                Object.Destroy(voiceChatContainer.gameObject);
+            }
             disposables.Dispose();
         }
 
@@ -160,6 +163,8 @@ namespace Extreal.Integration.Chat.OME
                     outResource.outStream.GetTracks().ToList().ForEach((track) => track.Stop());
                     outResource.outStream.Dispose();
                 }
+
+                outResources.Remove(streamName);
             }
         }
 
