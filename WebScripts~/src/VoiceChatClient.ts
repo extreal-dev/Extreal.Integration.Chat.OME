@@ -4,11 +4,12 @@ type VoiceChatConfig = {
     initialMute: boolean;
     initialInVolume: number;
     initialOutVolume: number;
+    audioLevelCheckIntervalSeconds: number;
     isDebug: boolean;
 };
 
 type VoiceChatClientCallbacks = {
-    onAudioLevelChanged: (audioLevels: Map<string, number>) => void;
+    onAudioLevelChanged: (id: string, audioLevel: number) => void;
 };
 
 class InResource {
@@ -39,8 +40,7 @@ class VoiceChatClient {
     private inResource: InResource | undefined;
     private outResources = new Map<string, OutResource>();
 
-    private audioLevelList = new Map<string, number>();
-    private previousAudioLevelList = new Map<string, number>();
+    private audioLevels = new Map<string, number>();
 
     constructor(
         getOmeClient: OmeClientProvider,
@@ -62,19 +62,32 @@ class VoiceChatClient {
         this.getOmeClient().addPublishPcCloseHook(this.closePublishPc);
         this.getOmeClient().addSubscribePcCloseHook(this.closeSubscribePc);
 
-        const audioContextResumeFunc = () => {
-            if (!this.audioContext) {
+        const resumeAudioContext = () => {
+            if (!this.audioContext)
+            {
                 this.audioContext = new AudioContext();
             }
             this.audioContext.resume();
-            document.getElementById("unity-canvas")?.removeEventListener("touchstart", audioContextResumeFunc);
-            document.getElementById("unity-canvas")?.removeEventListener("mousedown", audioContextResumeFunc);
-            document.getElementById("unity-canvas")?.removeEventListener("keydown", audioContextResumeFunc);
-        };
-        document.getElementById("unity-canvas")?.addEventListener("touchstart", audioContextResumeFunc);
-        document.getElementById("unity-canvas")?.addEventListener("mousedown", audioContextResumeFunc);
-        document.getElementById("unity-canvas")?.addEventListener("keydown", audioContextResumeFunc);
+        }
+
+        this.executeOnceOnSpecifiedEvents("unity-canvas", ["touchstart", "mousedown", "keydown"], resumeAudioContext);
+
+
+        setInterval(this.handleAudioLevelChange, voiceChatConfig.audioLevelCheckIntervalSeconds * 1000);
     }
+
+    private executeOnceOnSpecifiedEvents = (targetElementId: string, eventNames: string[], action: () => void) => {
+        const executeActionAndRemove = () => {
+            action();
+            eventNames.forEach(eventName => {
+                document.getElementById(targetElementId)?.removeEventListener(eventName, executeActionAndRemove);
+            });
+        };
+
+        eventNames.forEach(eventName => {
+            document.getElementById(targetElementId)?.addEventListener(eventName, executeActionAndRemove);
+        });
+    };
 
     private createPublishPc = async (streamName: string, pc: RTCPeerConnection) => {
         if (!this.audioContext) {
@@ -204,42 +217,36 @@ class VoiceChatClient {
         }
     };
 
-    public handleAudioLevels = () => {
+    public handleAudioLevelChange = () => {
         if (!this.getOmeClient().localStreamName) {
             return;
         }
 
-        this.previousAudioLevelList.clear();
-        this.audioLevelList.forEach((level, id) => {
-            this.previousAudioLevelList.set(id, level);
-        });
-        this.audioLevelList.clear();
+        this.handleInAudioLevelChange(this.getOmeClient().localStreamName);
+        this.handleOutAudioLevelChange();
+    }
 
+    private handleInAudioLevelChange = (localStreamName: string) => {
         if (this.inResource?.inAnalyzerNode) {
-            const inAudioLevel = this.mute ? 0 : this.getAudioLevel(this.inResource.inAnalyzerNode);
-            this.audioLevelList.set(this.getOmeClient().localStreamName, inAudioLevel);
+            const audioLevel = this.mute ? 0 : this.getAudioLevel(this.inResource.inAnalyzerNode);
+            if (!this.audioLevels.has(localStreamName) || this.audioLevels.get(localStreamName) != audioLevel) {
+                this.audioLevels.set(localStreamName, audioLevel);
+                this.callbacks.onAudioLevelChanged(localStreamName, audioLevel);
+            }
         }
+    }
 
+    private handleOutAudioLevelChange = () => {
         this.outResources.forEach((outResource, streamName) => {
             if (outResource.outAnalyzerNode) {
-                const outAudioLevel = this.getAudioLevel(outResource.outAnalyzerNode);
-                this.audioLevelList.set(streamName, outAudioLevel);
+                const audioLevel = this.getAudioLevel(outResource.outAnalyzerNode);
+                if (!this.audioLevels.has(streamName) || this.audioLevels.get(streamName) != audioLevel) {
+                    this.audioLevels.set(streamName, audioLevel);
+                    this.callbacks.onAudioLevelChanged(streamName, audioLevel);
+                }
             }
         });
-
-        this.previousAudioLevelList.forEach((level, streamName) => {
-            if (!this.audioLevelList.has(streamName) || this.audioLevelList.get(streamName) !== level) {
-                this.callbacks.onAudioLevelChanged(this.audioLevelList);
-                return;
-            }
-        });
-        this.audioLevelList.forEach((_, id) => {
-            if (!this.previousAudioLevelList.has(id)) {
-                this.callbacks.onAudioLevelChanged(this.audioLevelList);
-                return;
-            }
-        });
-    };
+    }
 
     private getAudioLevel = (analyserNode: AnalyserNode) => {
         const samples = new Float32Array(analyserNode.fftSize);

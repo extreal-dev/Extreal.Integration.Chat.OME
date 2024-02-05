@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.WebRTC;
 using Extreal.Integration.SFU.OME;
+using System;
+using Object = UnityEngine.Object;
 
 namespace Extreal.Integration.Chat.OME
 {
@@ -34,7 +36,7 @@ namespace Extreal.Integration.Chat.OME
 
 
         [SuppressMessage("Usage", "CC0022")]
-        public NativeVoiceChatClient(NativeOmeClient omeClient, VoiceChatConfig voiceChatConfig) : base(voiceChatConfig)
+        public NativeVoiceChatClient(NativeOmeClient omeClient, VoiceChatConfig voiceChatConfig)
         {
             voiceChatContainer = new GameObject("VoiceChatContainer").transform;
             Object.DontDestroyOnLoad(voiceChatContainer);
@@ -69,6 +71,10 @@ namespace Extreal.Integration.Chat.OME
 
             this.omeClient.OnLeft
                 .Subscribe(_ => localStreamName = null)
+                .AddTo(disposables);
+
+            Observable.Interval(TimeSpan.FromSeconds(voiceChatConfig.AudioLevelCheckIntervalSeconds))
+                .Subscribe(_ => HandleAudioLevelChange())
                 .AddTo(disposables);
         }
 
@@ -210,7 +216,7 @@ namespace Extreal.Integration.Chat.OME
             outResources.Values.ToList().ForEach(outResource => outResource.outAudio.volume = outVolume);
         }
 
-        protected override void HandleAudioLevelChange()
+        private void HandleAudioLevelChange()
         {
             if (string.IsNullOrEmpty(localStreamName))
             {

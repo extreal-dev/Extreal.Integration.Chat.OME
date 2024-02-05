@@ -23,12 +23,7 @@ class VoiceChatAdapter {
                 console.log(voiceChatConfig);
             }
             this.voiceChatClient = new VoiceChatClient(getOmeClient, voiceChatConfig, hasMicrophone, {
-                onAudioLevelChanged: (audioLevels) => {
-                    const audioLevelPairs = {
-                        pairs: [...audioLevels.entries()].map((pair) => ({ key: pair[0], value: pair[1] })),
-                    };
-                    callback(this.withPrefix("HandleOnAudioLevelChanged"), JSON.stringify(audioLevelPairs));
-                },
+                onAudioLevelChanged: (id, audioLevel) => callback(this.withPrefix("HandleOnAudioLevelChanged"), id, audioLevel.toString()),
             });
         });
 
@@ -39,7 +34,6 @@ class VoiceChatAdapter {
         addAction(this.withPrefix("DoSetOutVolume"), (volume) =>
             this.getVoiceChatClient().setOutVolume(Number(volume)),
         );
-        addAction(this.withPrefix("AudioLevelChangeHandler"), () => this.getVoiceChatClient().handleAudioLevels());
     };
 
     private withPrefix = (name: string) => `WebGLVoiceChatClient#${name}`;

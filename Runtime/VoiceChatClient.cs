@@ -31,14 +31,10 @@ namespace Extreal.Integration.Chat.OME
 
 
         [SuppressMessage("Usage", "CC0022")]
-        protected VoiceChatClient(VoiceChatConfig voiceChatConfig)
+        protected VoiceChatClient()
         {
             onMuted = new Subject<bool>().AddTo(disposables);
             onAudioLevelChanged = new Subject<(string, float)>().AddTo(disposables);
-
-            Observable.Interval(TimeSpan.FromSeconds(voiceChatConfig.AudioLevelCheckIntervalSeconds))
-                .Subscribe(_ => HandleAudioLevelChange())
-                .AddTo(disposables);
         }
 
         protected sealed override void ReleaseManagedResources()
@@ -86,7 +82,5 @@ namespace Extreal.Integration.Chat.OME
         }
 
         protected abstract void DoSetOutVolume(float volume);
-
-        protected abstract void HandleAudioLevelChange();
     }
 }

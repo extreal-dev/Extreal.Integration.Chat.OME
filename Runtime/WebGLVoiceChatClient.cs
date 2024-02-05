@@ -14,7 +14,7 @@ namespace Extreal.Integration.Chat.OME
     {
         private static WebGLVoiceChatClient instance;
 
-        public WebGLVoiceChatClient(WebGLVoiceChatConfig voiceChatConfig) : base(voiceChatConfig)
+        public WebGLVoiceChatClient(WebGLVoiceChatConfig voiceChatConfig)
         {
             instance = this;
             WebGLHelper.CallAction(WithPrefix(nameof(WebGLVoiceChatClient)), JsonVoiceChatConfig.ToJson(voiceChatConfig));
@@ -43,9 +43,6 @@ namespace Extreal.Integration.Chat.OME
         protected override void DoSetOutVolume(float volume)
             => WebGLHelper.CallAction(WithPrefix(nameof(DoSetOutVolume)), volume.ToString());
 
-        protected override void HandleAudioLevelChange()
-            => WebGLHelper.CallAction(WithPrefix(nameof(HandleAudioLevelChange)));
-
         private static string WithPrefix(string name) => $"{nameof(WebGLVoiceChatClient)}#{name}";
     }
 
@@ -55,6 +52,7 @@ namespace Extreal.Integration.Chat.OME
         [SerializeField, SuppressMessage("Usage", "IDE0052"), SuppressMessage("Usage", "CC0052")] private bool initialMute;
         [SerializeField, SuppressMessage("Usage", "IDE0052"), SuppressMessage("Usage", "CC0052")] private float initialInVolume;
         [SerializeField, SuppressMessage("Usage", "IDE0052"), SuppressMessage("Usage", "CC0052")] private float initialOutVolume;
+        [SerializeField, SuppressMessage("Usage", "IDE0052"), SuppressMessage("Usage", "CC0052")] private float audioLevelCheckIntervalSeconds;
         [SerializeField, SuppressMessage("Usage", "IDE0052"), SuppressMessage("Usage", "CC0052")] private bool isDebug;
 
         public static string ToJson(WebGLVoiceChatConfig voiceChatConfig)
@@ -64,6 +62,7 @@ namespace Extreal.Integration.Chat.OME
                 initialMute = voiceChatConfig.InitialMute,
                 initialInVolume = voiceChatConfig.InitialInVolume,
                 initialOutVolume = voiceChatConfig.InitialOutVolume,
+                audioLevelCheckIntervalSeconds = voiceChatConfig.AudioLevelCheckIntervalSeconds,
                 isDebug = voiceChatConfig.IsDebug,
             };
             return JsonUtility.ToJson(jsonVoiceChatConfig);
