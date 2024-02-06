@@ -13,6 +13,9 @@ using Object = UnityEngine.Object;
 
 namespace Extreal.Integration.Chat.OME
 {
+    /// <summary>
+    /// Class that handles voice chat client for native application.
+    /// </summary>
     public class NativeVoiceChatClient : VoiceChatClient
     {
         private readonly NativeOmeClient omeClient;
@@ -34,7 +37,11 @@ namespace Extreal.Integration.Chat.OME
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
 
-
+        /// <summary>
+        /// Creates NativeVoiceChatClient with omeClient and voiceChatConfig.
+        /// </summary>
+        /// <param name="omeClient">OME client.</param>
+        /// <param name="voiceChatConfig">Voice chat config.</param>
         [SuppressMessage("Usage", "CC0022")]
         public NativeVoiceChatClient(NativeOmeClient omeClient, VoiceChatConfig voiceChatConfig)
         {
@@ -78,6 +85,7 @@ namespace Extreal.Integration.Chat.OME
                 .AddTo(disposables);
         }
 
+        /// <inheritdoc/>
         protected override void DoReleaseManagedResources()
         {
             Microphone.End(null);
@@ -182,6 +190,7 @@ namespace Extreal.Integration.Chat.OME
             return outAudio;
         }
 
+        /// <inheritdoc/>
         public override void Clear()
         {
             mute = voiceChatConfig.InitialMute;
@@ -189,8 +198,10 @@ namespace Extreal.Integration.Chat.OME
             outVolume = voiceChatConfig.InitialOutVolume;
         }
 
+        /// <inheritdoc/>
         public override bool HasMicrophone() => mic != null || inResource.inAudio?.clip != null;
 
+        /// <inheritdoc/>
         protected override bool DoToggleMute()
         {
             mute = !mute;
@@ -201,6 +212,7 @@ namespace Extreal.Integration.Chat.OME
             return mute;
         }
 
+        /// <inheritdoc/>
         protected override void DoSetInVolume(float volume)
         {
             inVolume = volume;
@@ -210,6 +222,7 @@ namespace Extreal.Integration.Chat.OME
             }
         }
 
+        /// <inheritdoc/>
         protected override void DoSetOutVolume(float volume)
         {
             outVolume = volume;

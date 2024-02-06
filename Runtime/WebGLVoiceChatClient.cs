@@ -10,10 +10,17 @@ using AOT;
 
 namespace Extreal.Integration.Chat.OME
 {
+    /// <summary>
+    /// class that handles voice chat client for WebGL application.
+    /// </summary>
     public class WebGLVoiceChatClient : VoiceChatClient
     {
         private static WebGLVoiceChatClient instance;
 
+        /// <summary>
+        /// Creates WebGLVoiceChatClient with voiceChatConfig.
+        /// </summary>
+        /// <param name="voiceChatConfig">Voice chat config.</param>
         public WebGLVoiceChatClient(WebGLVoiceChatConfig voiceChatConfig)
         {
             instance = this;
@@ -28,18 +35,23 @@ namespace Extreal.Integration.Chat.OME
             instance.FireOnAudioLevelChanged(id, audioLevel);
         }
 
+        /// <inheritdoc/>
         public override void Clear()
             => WebGLHelper.CallAction(WithPrefix(nameof(Clear)));
 
+        /// <inheritdoc/>
         public override bool HasMicrophone()
             => bool.Parse(WebGLHelper.CallFunction(WithPrefix(nameof(HasMicrophone))));
 
+        /// <inheritdoc/>
         protected override bool DoToggleMute()
             => bool.Parse(WebGLHelper.CallFunction(WithPrefix(nameof(DoToggleMute))));
 
+        /// <inheritdoc/>
         protected override void DoSetInVolume(float volume)
             => WebGLHelper.CallAction(WithPrefix(nameof(DoSetInVolume)), volume.ToString());
 
+        /// <inheritdoc/>
         protected override void DoSetOutVolume(float volume)
             => WebGLHelper.CallAction(WithPrefix(nameof(DoSetOutVolume)), volume.ToString());
 
