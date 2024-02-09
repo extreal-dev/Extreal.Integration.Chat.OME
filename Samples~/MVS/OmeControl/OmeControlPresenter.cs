@@ -34,12 +34,12 @@ namespace Extreal.Integration.Chat.OME.MVS.OmeControl
                 .AddTo(disposables);
 
             stageNavigator.OnStageTransitioning
-                .Subscribe(async _ => await omeClient.DisconnectAsync())
+                .Subscribe(async _ => await omeClient.LeaveAsync())
                 .AddTo(disposables);
         }
 
         private async UniTask StartOmeClientAsync(AppState appState)
-            => await omeClient.ConnectAsync(appState.GroupName);
+            => await omeClient.JoinAsync(appState.GroupName);
 
         protected override void ReleaseManagedResources() => disposables.Dispose();
     }
