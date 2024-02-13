@@ -63,15 +63,13 @@ class VoiceChatClient {
         this.getOmeClient().addSubscribePcCloseHook(this.closeSubscribePc);
 
         const resumeAudioContext = () => {
-            if (!this.audioContext)
-            {
+            if (!this.audioContext) {
                 this.audioContext = new AudioContext();
             }
             this.audioContext.resume();
-        }
+        };
 
         this.executeOnceOnSpecifiedEvents("unity-canvas", ["touchstart", "mousedown", "keydown"], resumeAudioContext);
-
 
         setInterval(this.handleAudioLevelChange, voiceChatConfig.audioLevelCheckIntervalSeconds * 1000);
     }
@@ -79,17 +77,17 @@ class VoiceChatClient {
     private executeOnceOnSpecifiedEvents = (targetElementId: string, eventNames: string[], action: () => void) => {
         const executeActionAndRemove = () => {
             action();
-            eventNames.forEach(eventName => {
+            eventNames.forEach((eventName) => {
                 document.getElementById(targetElementId)?.removeEventListener(eventName, executeActionAndRemove);
             });
         };
 
-        eventNames.forEach(eventName => {
+        eventNames.forEach((eventName) => {
             document.getElementById(targetElementId)?.addEventListener(eventName, executeActionAndRemove);
         });
     };
 
-    private createPublishPc = async (streamName: string, pc: RTCPeerConnection) => {
+    private createPublishPc = async (clientId: string, pc: RTCPeerConnection) => {
         if (!this.audioContext) {
             this.audioContext = new AudioContext();
         }
@@ -120,11 +118,11 @@ class VoiceChatClient {
         }
     };
 
-    private createSubscribePc = (streamName: string, pc: RTCPeerConnection) => {
+    private createSubscribePc = (clientId: string, pc: RTCPeerConnection) => {
         const outAudio = new Audio();
         const outResource = new OutResource();
         outResource.outAudio = outAudio;
-        this.outResources.set(streamName, outResource);
+        this.outResources.set(clientId, outResource);
 
         pc.addEventListener("track", (event) => {
             if (!this.audioContext) {
@@ -147,7 +145,7 @@ class VoiceChatClient {
         });
     };
 
-    private closePublishPc = (streamName: string) => {
+    private closePublishPc = (clientId: string) => {
         if (!this.inResource) {
             return;
         }
@@ -159,8 +157,8 @@ class VoiceChatClient {
         this.inResource = undefined;
     };
 
-    private closeSubscribePc = (streamName: string) => {
-        const outResource = this.outResources.get(streamName);
+    private closeSubscribePc = (clientId: string) => {
+        const outResource = this.outResources.get(clientId);
         if (!outResource) {
             return;
         }
@@ -173,7 +171,7 @@ class VoiceChatClient {
             outResource.outStream.getTracks().forEach((track) => track.stop());
         }
 
-        this.outResources.delete(streamName);
+        this.outResources.delete(clientId);
     };
 
     public clear = () => {
@@ -218,35 +216,35 @@ class VoiceChatClient {
     };
 
     public handleAudioLevelChange = () => {
-        if (!this.getOmeClient().localStreamName) {
+        if (!this.getOmeClient().localClientId) {
             return;
         }
 
-        this.handleInAudioLevelChange(this.getOmeClient().localStreamName);
+        this.handleInAudioLevelChange(this.getOmeClient().localClientId);
         this.handleOutAudioLevelChange();
-    }
+    };
 
-    private handleInAudioLevelChange = (localStreamName: string) => {
+    private handleInAudioLevelChange = (localClientId: string) => {
         if (this.inResource?.inAnalyzerNode) {
             const audioLevel = this.mute ? 0 : this.getAudioLevel(this.inResource.inAnalyzerNode);
-            if (!this.audioLevels.has(localStreamName) || this.audioLevels.get(localStreamName) != audioLevel) {
-                this.audioLevels.set(localStreamName, audioLevel);
-                this.callbacks.onAudioLevelChanged(localStreamName, audioLevel);
+            if (!this.audioLevels.has(localClientId) || this.audioLevels.get(localClientId) !== audioLevel) {
+                this.audioLevels.set(localClientId, audioLevel);
+                this.callbacks.onAudioLevelChanged(localClientId, audioLevel);
             }
         }
-    }
+    };
 
     private handleOutAudioLevelChange = () => {
-        this.outResources.forEach((outResource, streamName) => {
+        this.outResources.forEach((outResource, clientId) => {
             if (outResource.outAnalyzerNode) {
                 const audioLevel = this.getAudioLevel(outResource.outAnalyzerNode);
-                if (!this.audioLevels.has(streamName) || this.audioLevels.get(streamName) != audioLevel) {
-                    this.audioLevels.set(streamName, audioLevel);
-                    this.callbacks.onAudioLevelChanged(streamName, audioLevel);
+                if (!this.audioLevels.has(clientId) || this.audioLevels.get(clientId) !== audioLevel) {
+                    this.audioLevels.set(clientId, audioLevel);
+                    this.callbacks.onAudioLevelChanged(clientId, audioLevel);
                 }
             }
         });
-    }
+    };
 
     private getAudioLevel = (analyserNode: AnalyserNode) => {
         const samples = new Float32Array(analyserNode.fftSize);

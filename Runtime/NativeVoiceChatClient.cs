@@ -20,7 +20,7 @@ namespace Extreal.Integration.Chat.OME
     {
         private readonly NativeOmeClient omeClient;
         private readonly VoiceChatConfig voiceChatConfig;
-        private string localStreamName;
+        private string localClientId;
 
         private readonly Transform voiceChatContainer;
         private (AudioSource inAudio, AudioStreamTrack inTrack, MediaStream inStream) inResource;
@@ -73,11 +73,11 @@ namespace Extreal.Integration.Chat.OME
             this.omeClient.AddSubscribePcCloseHook(CloseSubscribePc);
 
             this.omeClient.OnJoined
-                .Subscribe(streamName => localStreamName = streamName)
+                .Subscribe(clientId => localClientId = clientId)
                 .AddTo(disposables);
 
             this.omeClient.OnLeft
-                .Subscribe(_ => localStreamName = null)
+                .Subscribe(_ => localClientId = null)
                 .AddTo(disposables);
 
             Observable.Interval(TimeSpan.FromSeconds(voiceChatConfig.AudioLevelCheckIntervalSeconds))
@@ -96,7 +96,7 @@ namespace Extreal.Integration.Chat.OME
             disposables.Dispose();
         }
 
-        private void CreatePublishPc(string streamName, OmeRTCPeerConnection pc)
+        private void CreatePublishPc(string clientId, OmeRTCPeerConnection pc)
         {
             inResource.inAudio = new GameObject("InAudio").AddComponent<AudioSource>();
             inResource.inAudio.transform.SetParent(voiceChatContainer);
@@ -115,7 +115,7 @@ namespace Extreal.Integration.Chat.OME
             pc.AddTrack(inResource.inTrack, inResource.inStream);
         }
 
-        private void CreateSubscribePc(string streamName, OmeRTCPeerConnection pc)
+        private void CreateSubscribePc(string clientId, OmeRTCPeerConnection pc)
         {
             var outStream = new MediaStream();
             pc.OnTrack = (RTCTrackEvent e) =>
@@ -135,16 +135,16 @@ namespace Extreal.Integration.Chat.OME
             {
                 if (e.Track is AudioStreamTrack track)
                 {
-                    var outAudio = CreateOutAudio(streamName);
+                    var outAudio = CreateOutAudio(clientId);
                     outAudio.SetTrack(track);
                     outAudio.Play();
                     outAudio.volume = outVolume;
-                    outResources[streamName] = (outAudio, outStream);
+                    outResources[clientId] = (outAudio, outStream);
                 }
             };
         }
 
-        private void ClosePublishPc(string streamName)
+        private void ClosePublishPc(string clientId)
         {
             if (inResource.inAudio != null)
             {
@@ -163,9 +163,9 @@ namespace Extreal.Integration.Chat.OME
             inResource = (default, default, default);
         }
 
-        private void CloseSubscribePc(string streamName)
+        private void CloseSubscribePc(string clientId)
         {
-            if (outResources.TryGetValue(streamName, out var outResource))
+            if (outResources.TryGetValue(clientId, out var outResource))
             {
                 if (outResource.outAudio != null)
                 {
@@ -178,7 +178,7 @@ namespace Extreal.Integration.Chat.OME
                     outResource.outStream.Dispose();
                 }
 
-                outResources.Remove(streamName);
+                outResources.Remove(clientId);
             }
         }
 
@@ -231,7 +231,7 @@ namespace Extreal.Integration.Chat.OME
 
         private void HandleAudioLevelChange()
         {
-            if (string.IsNullOrEmpty(localStreamName))
+            if (string.IsNullOrEmpty(localClientId))
             {
                 return;
             }
@@ -245,24 +245,24 @@ namespace Extreal.Integration.Chat.OME
             if (inResource.inAudio != null)
             {
                 var audioLevel = mute ? 0f : GetAudioLevel(inResource.inAudio);
-                if (!audioLevels.ContainsKey(localStreamName) || audioLevels[localStreamName] != audioLevel)
+                if (!audioLevels.ContainsKey(localClientId) || audioLevels[localClientId] != audioLevel)
                 {
-                    audioLevels[localStreamName] = audioLevel;
-                    FireOnAudioLevelChanged(localStreamName, audioLevel);
+                    audioLevels[localClientId] = audioLevel;
+                    FireOnAudioLevelChanged(localClientId, audioLevel);
                 }
             }
         }
 
         private void HandleOutAudioLevelChange()
         {
-            foreach (var streamName in outResources.Keys)
+            foreach (var clientId in outResources.Keys)
             {
-                var outAudio = outResources[streamName].outAudio;
+                var outAudio = outResources[clientId].outAudio;
                 var audioLevel = GetAudioLevel(outAudio);
-                if (!audioLevels.ContainsKey(streamName) || audioLevels[streamName] != audioLevel)
+                if (!audioLevels.ContainsKey(clientId) || audioLevels[clientId] != audioLevel)
                 {
-                    audioLevels[streamName] = audioLevel;
-                    FireOnAudioLevelChanged(streamName, audioLevel);
+                    audioLevels[clientId] = audioLevel;
+                    FireOnAudioLevelChanged(clientId, audioLevel);
                 }
             }
         }
