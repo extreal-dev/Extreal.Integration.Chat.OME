@@ -1,6 +1,5 @@
 #if !UNITY_WEBGL || UNITY_EDITOR
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 using UniRx;
 using Extreal.Core.Logging;
 using System.Diagnostics.CodeAnalysis;
