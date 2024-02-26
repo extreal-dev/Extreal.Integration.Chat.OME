@@ -12,7 +12,7 @@ namespace Extreal.Integration.Chat.OME
         /// Provides voice chat client.
         /// </summary>
         /// <param name="omeClient">OME client.</param>
-        /// <param name="config">Voice chat config.</param>
+        /// <param name="voiceChatConfig">Voice chat config.</param>
         /// <returns>Voice chat client.</returns>
         public static VoiceChatClient Provide(OmeClient omeClient, VoiceChatConfig voiceChatConfig)
         {

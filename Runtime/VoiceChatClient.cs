@@ -36,6 +36,7 @@ namespace Extreal.Integration.Chat.OME
         protected void FireOnAudioLevelChanged(string id, float audioLevel)
             => onAudioLevelChanged.OnNext((id, audioLevel));
 
+        [SuppressMessage("Usage", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
 

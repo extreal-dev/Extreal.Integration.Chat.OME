@@ -33,6 +33,7 @@ namespace Extreal.Integration.Chat.OME
 
         private readonly Dictionary<string, float> audioLevels = new Dictionary<string, float>();
 
+        [SuppressMessage("Usage", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(VoiceChatClient));
 
