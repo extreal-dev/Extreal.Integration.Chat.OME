@@ -1,4 +1,4 @@
-﻿# @extreal-dev/extreal.integration.p2p.webrtc
+﻿# @extreal-dev/extreal.integration.chat.ome
 
 This package is a feature provided by [Extreal](https://fintan.jp/page/6717/), a Unity-based XR framework.
 
