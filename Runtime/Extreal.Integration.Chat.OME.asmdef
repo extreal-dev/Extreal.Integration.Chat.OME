@@ -1,0 +1,22 @@
+{
+    "name": "Extreal.Integration.Chat.OME",
+    "rootNamespace": "Extreal.Integration.Chat.OME",
+    "references": [
+        "Extreal.Core.Logging",
+        "Extreal.Core.Common",
+        "Extreal.Integration.Web.Common",
+        "Extreal.Integration.SFU.OME",
+        "UniTask",
+        "UniRx",
+        "Unity.WebRTC"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

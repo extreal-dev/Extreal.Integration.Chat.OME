@@ -1,0 +1,37 @@
+{
+  "name": "@extreal-dev/extreal.integration.chat.ome",
+  "version": "1.0.0-next.1",
+  "scripts": {
+    "dev": "rollup --config rollup.config.ts --configPlugin typescript",
+    "prod": "rollup --config rollup.config.ts --configPlugin typescript --environment BUILD:production"
+  },
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/extreal-dev/Extreal.Integration.Chat.OME.git",
+    "directory": "WebScripts~"
+  },
+  "author": {
+    "name": "TIS Inc."
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/node": "^20.10.4",
+    "rollup": "^4.9.5",
+    "rome": "^12.1.3",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@extreal-dev/extreal.integration.sfu.ome": "1.0.0-next.3",
+    "@extreal-dev/extreal.integration.web.common": "1.1.0-next.3"
+  }
+}
