@@ -1,5 +1,5 @@
 import { OmeAdapter } from "@extreal-dev/extreal.integration.sfu.ome";
-import { VoiceChatAdapter } from "@extreal-dev/Extreal.Integration.Chat.OME";
+import { VoiceChatAdapter } from "@extreal-dev/extreal.integration.chat.ome";
 
 const omeAdapter = new OmeAdapter();
 omeAdapter.adapt();

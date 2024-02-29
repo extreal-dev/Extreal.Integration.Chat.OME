@@ -2,8 +2,10 @@
 # yarn lockfile v1
 
 
-"@extreal-dev/extreal.integration.sfu.ome@../../Extreal.Integration.SFU.OME/WebScripts~/":
-  version "1.0.0-next.1"
+"@extreal-dev/extreal.integration.sfu.ome@1.0.0-next.3":
+  version "1.0.0-next.2"
+  resolved "https://registry.yarnpkg.com/@extreal-dev/extreal.integration.sfu.ome/-/extreal.integration.sfu.ome-1.0.0-next.2.tgz#ff9dfc5a5f3576d08a599bea1969e22f1a67c4b0"
+  integrity sha512-Jxf6q909Ph1xMYgZjgehfJyMKBcFLR1GkWZRjysHrJLjyxA22iQw2F68T3kxC+C0/t/oPNlvDqmKHDgYyE2xNg==
   dependencies:
     "@extreal-dev/extreal.integration.web.common" "1.1.0-next.2"
 
@@ -11,6 +13,11 @@
   version "1.1.0-next.2"
   resolved "https://registry.yarnpkg.com/@extreal-dev/extreal.integration.web.common/-/extreal.integration.web.common-1.1.0-next.2.tgz#752a8c9b89a4d92e49220b75cf39cb7070434a03"
   integrity sha512-1xnnY+qGaL48bKy9X+ZStEO2yQ7xku4ChHvrADmtyFYlUMV2bhZUyxLkGrljFRp2qmor488AU29/UK5AibfkaQ==
+
+"@extreal-dev/extreal.integration.web.common@1.1.0-next.3":
+  version "1.1.0-next.3"
+  resolved "https://registry.yarnpkg.com/@extreal-dev/extreal.integration.web.common/-/extreal.integration.web.common-1.1.0-next.3.tgz#bd277a92f7b262c6882e57fc19704884ec2649a2"
+  integrity sha512-NO3d65FG47yigviEmm+qpEQEGAEUNRRrIC0Rx43c98a1OOayQ1EKC8qz7I8IWrTm5BXbYYyher9xs/x06/tgMg==
 
 "@jridgewell/gen-mapping@^0.3.0":
   version "0.3.3"

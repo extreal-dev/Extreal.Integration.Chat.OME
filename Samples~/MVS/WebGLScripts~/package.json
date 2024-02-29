@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@extreal-dev/Extreal.Integration.Chat.OME": "../../../../../../Packages/Extreal.Integration.Chat.OME/WebScripts~/"
+    "@extreal-dev/extreal.integration.chat.ome": "../../../../../../Packages/Extreal.Integration.Chat.OME/WebScripts~/",
+    "@extreal-dev/extreal.integration.sfu.ome": "1.0.0-next.3"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.1.0",

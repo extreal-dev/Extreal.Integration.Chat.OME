@@ -31,7 +31,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@extreal-dev/extreal.integration.sfu.ome": "1.0.0-next.2",
-    "@extreal-dev/extreal.integration.web.common": "1.1.0-next.2"
+    "@extreal-dev/extreal.integration.sfu.ome": "1.0.0-next.3",
+    "@extreal-dev/extreal.integration.web.common": "1.1.0-next.3"
   }
 }
