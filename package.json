@@ -11,6 +11,8 @@
     "com.neuecc.unirx": "7.1.0",
     "jp.co.tis.extreal.core.logging": "1.2.0",
     "jp.co.tis.extreal.core.common": "1.2.0-next.1",
+    "jp.co.tis.extreal.integration.web.common": "1.1.0-next.3",
+    "jp.co.tis.extreal.integration.sfu.ome": "1.0.0-next.1",
     "com.unity.webrtc": "3.0.0-pre.7"
   },
   "samples": [
