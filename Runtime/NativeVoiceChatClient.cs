@@ -118,28 +118,66 @@ namespace Extreal.Integration.Chat.OME
         private void CreateSubscribePc(string clientId, RTCPeerConnection pc)
         {
             var outStream = new MediaStream();
+
+            outStream.OnRemoveTrack += e => Logger.LogDebug($"OnRemoveTrack: {e}");
+
             pc.OnTrack = (RTCTrackEvent e) =>
             {
-                if (Logger.IsDebug())
+                if (e.Transceiver is RTCRtpTransceiver transceiver && e.Receiver is RTCRtpReceiver receiver && e.Track is MediaStreamTrack track)
                 {
-                    Logger.LogDebug($"OnTrack: Kind={e.Track.Kind}");
-                }
+                    if (Logger.IsDebug())
+                    {
+                        Logger.LogDebug($"OnTrack: Kind={e.Track.Kind}");
+                    }
 
-                if (e.Track.Kind == TrackKind.Audio)
+                    if (e.Track.Kind == TrackKind.Audio)
+                    {
+                        Logger.LogError("MediaStreamTrack cast succeeded");
+                        outStream.AddTrack(e.Track);
+                        Logger.LogError("outStream.AddTrack succeeded");
+                    }
+                }
+                else
                 {
-                    outStream.AddTrack(e.Track);
+                    try
+                    {
+                        Logger.LogError($"InvalidCastException has occurred");
+                        Logger.LogError($"InvalidCastException has occurred: {e.GetType()}");
+                        Logger.LogError($"InvalidCastException has occurred: {e.Transceiver.GetType()}");
+                        Logger.LogError($"InvalidCastException has occurred: {e.Receiver.GetType()}");
+                        Logger.LogError($"InvalidCastException has occurred: {e.Track.GetType()}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError("OnTrack Logging Exception", ex);
+                    }
                 }
             };
 
             outStream.OnAddTrack = e =>
             {
+                Logger.LogDebug($"OnAddTrack: {e}");
+
                 if (e.Track is AudioStreamTrack track)
                 {
+                    Logger.LogDebug($"e.Track is AudioStreamTrack");
+
                     var outAudio = CreateOutAudio(clientId);
                     outAudio.SetTrack(track);
                     outAudio.Play();
                     outAudio.volume = outVolume;
                     outResources[clientId] = (outAudio, outStream);
+                }
+                else
+                {
+                    try
+                    {
+                        Logger.LogDebug($"e.Track is NOT AudioStreamTrack: {e.Track.GetType()}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError("OnAddTrack Logging Exception", ex);
+                    }
                 }
             };
         }
@@ -250,6 +288,11 @@ namespace Extreal.Integration.Chat.OME
                     audioLevels[localClientId] = audioLevel;
                     FireOnAudioLevelChanged(localClientId, audioLevel);
                 }
+
+                if (audioLevel == 0f)
+                {
+                    Logger.LogDebug($"[{DateTime.UtcNow}] volume is zero: {localClientId}");
+                }
             }
         }
 
@@ -263,6 +306,11 @@ namespace Extreal.Integration.Chat.OME
                 {
                     audioLevels[clientId] = audioLevel;
                     FireOnAudioLevelChanged(clientId, audioLevel);
+                }
+
+                if (audioLevel == 0f)
+                {
+                    Logger.LogDebug($"[{DateTime.UtcNow}] volume is zero: {clientId}");
                 }
             }
         }
