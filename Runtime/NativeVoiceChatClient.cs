@@ -119,11 +119,9 @@ namespace Extreal.Integration.Chat.OME
         {
             var outStream = new MediaStream();
 
-            outStream.OnRemoveTrack += e => Logger.LogDebug($"OnRemoveTrack: {e}");
-
             pc.OnTrack = (RTCTrackEvent e) =>
             {
-                if (e.Transceiver is RTCRtpTransceiver transceiver && e.Receiver is RTCRtpReceiver receiver && e.Track is MediaStreamTrack track)
+                try
                 {
                     if (Logger.IsDebug())
                     {
@@ -132,52 +130,39 @@ namespace Extreal.Integration.Chat.OME
 
                     if (e.Track.Kind == TrackKind.Audio)
                     {
-                        Logger.LogError("MediaStreamTrack cast succeeded");
                         outStream.AddTrack(e.Track);
-                        Logger.LogError("outStream.AddTrack succeeded");
                     }
                 }
-                else
+                catch (Exception exception)
                 {
-                    try
+                    if (Logger.IsDebug())
                     {
-                        Logger.LogError($"InvalidCastException has occurred");
-                        Logger.LogError($"InvalidCastException has occurred: {e.GetType()}");
-                        Logger.LogError($"InvalidCastException has occurred: {e.Transceiver.GetType()}");
-                        Logger.LogError($"InvalidCastException has occurred: {e.Receiver.GetType()}");
-                        Logger.LogError($"InvalidCastException has occurred: {e.Track.GetType()}");
+                        Logger.LogDebug("Exception has occurred at pc.OnTrack", exception);
                     }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError("OnTrack Logging Exception", ex);
-                    }
+                    omeClient.NotifySubscribeFailure(clientId, exception.Message);
                 }
             };
 
             outStream.OnAddTrack = e =>
             {
-                Logger.LogDebug($"OnAddTrack: {e}");
-
-                if (e.Track is AudioStreamTrack track)
+                try
                 {
-                    Logger.LogDebug($"e.Track is AudioStreamTrack");
-
-                    var outAudio = CreateOutAudio(clientId);
-                    outAudio.SetTrack(track);
-                    outAudio.Play();
-                    outAudio.volume = outVolume;
-                    outResources[clientId] = (outAudio, outStream);
+                    if (e.Track is AudioStreamTrack track)
+                    {
+                        var outAudio = CreateOutAudio(clientId);
+                        outAudio.SetTrack(track);
+                        outAudio.Play();
+                        outAudio.volume = outVolume;
+                        outResources[clientId] = (outAudio, outStream);
+                    }
                 }
-                else
+                catch (Exception exception)
                 {
-                    try
+                    if (Logger.IsDebug())
                     {
-                        Logger.LogDebug($"e.Track is NOT AudioStreamTrack: {e.Track.GetType()}");
+                        Logger.LogDebug("Exception has occurred at outStream.OnAddTrack", exception);
                     }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError("OnAddTrack Logging Exception", ex);
-                    }
+                    omeClient.NotifySubscribeFailure(clientId, exception.Message);
                 }
             };
         }
